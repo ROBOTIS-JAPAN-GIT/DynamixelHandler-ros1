@@ -46,7 +46,7 @@ note: Dynamixel Xシリーズのみ対応（Pシリーズの対応は後ほど�
 
 ```
 $ cd ~/catkin_ws/src
-$ git clone https://github.com/SHINOBI-organization/DynamixelHandler-ros1 dynamixel_handler
+$ git clone https://github.com/ROBOTIS-JAPAN-GIT/DynamixelHandler-ros1 dynamixel_handler
 $ cd ./dynamixel_handler
 $ git submodule init
 $ git submodule update
