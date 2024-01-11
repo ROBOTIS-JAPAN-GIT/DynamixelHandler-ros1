@@ -68,7 +68,6 @@ add_message_files(
     
   # write専用
   DynamixelCommand.msg
-  DynamixelCommand_Profile.msg
   DynamixelCommand_X_ControlCurrent.msg
   DynamixelCommand_X_ControlCurrentPosition.msg
   DynamixelCommand_X_ControlExtendedPosition.msg

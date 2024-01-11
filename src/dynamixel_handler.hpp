@@ -15,7 +15,6 @@ using ros::Time;
 #include <dynamixel_handler/DynamixelOption_Mode.h>
 #include <dynamixel_handler/DynamixelOption_Goal.h>
 #include <dynamixel_handler/DynamixelCommand.h>
-#include <dynamixel_handler/DynamixelCommand_Profile.h>
 #include <dynamixel_handler/DynamixelCommand_X_ControlPosition.h>
 #include <dynamixel_handler/DynamixelCommand_X_ControlVelocity.h>
 #include <dynamixel_handler/DynamixelCommand_X_ControlCurrent.h>
@@ -34,6 +33,8 @@ using std::vector;
 using std::array;
 #include <set>
 using std::set;
+#include <utility>
+using std::pair;
 #include <algorithm>
 using std::max_element;
 using std::min_element;
@@ -75,12 +76,12 @@ class DynamixelHandler {
         static void CallBackDxlOpt_Gain  (const dynamixel_handler::DynamixelOption_Gain& msg);  // todo
         static void CallBackDxlOpt_Mode  (const dynamixel_handler::DynamixelOption_Mode& msg);  // todo
         static void CallBackDxlCommand                   (const dynamixel_handler::DynamixelCommand& msg);    // todo
-        static void CallBackDxlCmd_Profile           (const dynamixel_handler::DynamixelCommand_Profile& msg); // todo
         static void CallBackDxlCmd_X_Position        (const dynamixel_handler::DynamixelCommand_X_ControlPosition& msg);
         static void CallBackDxlCmd_X_Velocity        (const dynamixel_handler::DynamixelCommand_X_ControlVelocity& msg);
         static void CallBackDxlCmd_X_Current         (const dynamixel_handler::DynamixelCommand_X_ControlCurrent& msg);
         static void CallBackDxlCmd_X_CurrentPosition (const dynamixel_handler::DynamixelCommand_X_ControlCurrentPosition& msg);
         static void CallBackDxlCmd_X_ExtendedPosition(const dynamixel_handler::DynamixelCommand_X_ControlExtendedPosition& msg);
+
         //* ROS publisher subscriber instance
         static inline ros::Publisher  pub_state_;
         static inline ros::Publisher  pub_error_;
@@ -89,7 +90,6 @@ class DynamixelHandler {
         static inline ros::Publisher  pub_opt_mode_;
         static inline ros::Publisher  pub_opt_goal_;
         static inline ros::Subscriber sub_command_;
-        static inline ros::Subscriber sub_cmd_profile_;
         static inline ros::Subscriber sub_cmd_x_pos_;
         static inline ros::Subscriber sub_cmd_x_vel_;
         static inline ros::Subscriber sub_cmd_x_cur_;
@@ -99,8 +99,6 @@ class DynamixelHandler {
         static inline ros::Subscriber sub_opt_gain_;
         static inline ros::Subscriber sub_opt_mode_;
 
-    private:
-        DynamixelHandler() = delete;
         //* 単体通信を組み合わせた上位機能
         static uint8_t ScanDynamixels(uint8_t id_max);
         static void StopDynamixels();
@@ -184,6 +182,7 @@ class DynamixelHandler {
             OVERLOAD           = 5,
         };
         enum OptLimitIndex { // opt_limit_のIndex, 各種の制限値
+            NONE = -1, // Indexには使わない特殊値
             TEMPERATURE_LIMIT  = 0,
             MAX_VOLTAGE_LIMIT  = 1,
             MIN_VOLTAGE_LIMIT  = 2,
@@ -235,6 +234,9 @@ class DynamixelHandler {
         static double SyncReadOption_Gain(); 
         static double SyncReadOption_Limit();
         static double SyncReadOption_Goal();
+
+    private:
+        DynamixelHandler() = delete;
 };
 
 // ちょっとした文字列の整形を行う補助関数
