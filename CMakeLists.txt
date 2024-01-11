@@ -194,6 +194,8 @@ add_executable(dynamixel_handler_node
   ${catkin_LIBRARIES}
 )
 
+add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 add_executable(dynamixel_unify_baudrate_node 
 	include/mylib_dynamixel/download/port_handler_linux_fix.cpp
 	include/mylib_dynamixel/download/port_handler_fix.cpp
@@ -203,9 +205,11 @@ add_executable(dynamixel_unify_baudrate_node
 	src/main_dynamixel_unify_baudrate.cpp
 )
 
- target_link_libraries(dynamixel_unify_baudrate_node
+target_link_libraries(dynamixel_unify_baudrate_node
   ${catkin_LIBRARIES}
 )
+
+add_dependencies(dynamixel_unify_baudrate_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 #############
 ## Install ##
