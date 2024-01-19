@@ -36,8 +36,8 @@ void DynamixelHandler::SyncWriteCommandValues(set<CmdValueIndex>& list_write_cmd
             default: /*ここに来たらエラ-*/ exit(1);
         }}(cmd);
         cmd_dp_list.push_back(dp);
-        for (const auto& [id, value] : cmd_values_) if ( is_cmd_updated_[id] ) {
-            const auto pulse  = dp.val2pulse( value[cmd], model_[id] );
+        for (const auto& id : id_list_) if ( is_cmd_updated_[id] ) {
+            const auto pulse  = dp.val2pulse( cmd_values_[id][cmd], model_[id] );
             id_cmd_vec_map[id].push_back( pulse );
         }
     }

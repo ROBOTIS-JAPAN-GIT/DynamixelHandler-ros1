@@ -19,9 +19,9 @@ vector<uint8_t> store_cmd(
         uint8_t id = id_list[i];
         auto value = is_angle ? deg2rad(cmd_list[i]) : cmd_list[i];
         auto& limit = DynamixelHandler::option_limit_[id];
-        auto val_max = ( DynamixelHandler::NONE == lim_index.second ) ? 256*2*M_PI : limit[lim_index.second]; //このあたり一般性のない書き方していてキモい
-        auto val_min = ( DynamixelHandler::NONE == lim_index.first  ) ? 256*2*M_PI :
-                       ( lim_index.first == lim_index.second ) ?  - val_max : limit[lim_index.first];
+        auto val_max = ( DynamixelHandler::NONE == lim_index.second ) ?  256*2*M_PI : limit[lim_index.second]; //このあたり一般性のない書き方していてキモい
+        auto val_min = ( DynamixelHandler::NONE == lim_index.first  ) ? -256*2*M_PI :
+                       (        lim_index.first == lim_index.second ) ?   - val_max : limit[lim_index.first];
         DynamixelHandler::cmd_values_[id][cmd_index] = clamp( value, val_min, val_max );
         DynamixelHandler::is_cmd_updated_[id] = true;
         DynamixelHandler::list_write_cmd_.insert(cmd_index);
@@ -89,7 +89,7 @@ void DynamixelHandler::CallBackDxlCmd_X_Current(const dynamixel_handler::Dynamix
 
 void DynamixelHandler::CallBackDxlCmd_X_CurrentPosition(const dynamixel_handler::DynamixelCommand_X_ControlCurrentPosition& msg) {
     for ( const uint8_t& id : msg.id_list ) ChangeOperatingMode(id, OPERATING_MODE_CURRENT_BASE_POSITION); 
-    vector<double> ext_pos(msg.id_list.size(), 0.0);
+    vector<double> ext_pos(max(msg.position__deg.size(), msg.rotation.size()), 0.0);
     for (size_t i=0; i<ext_pos.size(); i++) ext_pos[i] = (msg.position__deg.size() == ext_pos.size() ? msg.position__deg[i] : 0.0 )
                                                             + (msg.rotation.size() == ext_pos.size() ? msg.rotation[i]*360  : 0.0 );
     vector<uint8_t> stored_pos = store_cmd(  msg.id_list, ext_pos, true,
@@ -110,7 +110,7 @@ void DynamixelHandler::CallBackDxlCmd_X_CurrentPosition(const dynamixel_handler:
 
 void DynamixelHandler::CallBackDxlCmd_X_ExtendedPosition(const dynamixel_handler::DynamixelCommand_X_ControlExtendedPosition& msg) {
     for ( const uint8_t& id : msg.id_list ) ChangeOperatingMode(id, OPERATING_MODE_EXTENDED_POSITION);
-    vector<double> ext_pos(msg.id_list.size(), 0.0);
+    vector<double> ext_pos(max(msg.position__deg.size(), msg.rotation.size()), 0.0);
     for (size_t i=0; i<ext_pos.size(); i++) ext_pos[i] = (msg.position__deg.size() == ext_pos.size() ? msg.position__deg[i] : 0.0 )
                                                             + (msg.rotation.size() == ext_pos.size() ? msg.rotation[i]*360  : 0.0 );
     vector<uint8_t> stored_pos = store_cmd( msg.id_list, ext_pos, true,
