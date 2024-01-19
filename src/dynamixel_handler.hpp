@@ -15,7 +15,6 @@ using ros::Time;
 #include <dynamixel_handler/DynamixelOption_Mode.h>
 #include <dynamixel_handler/DynamixelOption_Goal.h>
 #include <dynamixel_handler/DynamixelCommand.h>
-#include <dynamixel_handler/DynamixelCommand_Profile.h>
 #include <dynamixel_handler/DynamixelCommand_X_ControlPosition.h>
 #include <dynamixel_handler/DynamixelCommand_X_ControlVelocity.h>
 #include <dynamixel_handler/DynamixelCommand_X_ControlCurrent.h>
@@ -34,6 +33,8 @@ using std::vector;
 using std::array;
 #include <set>
 using std::set;
+#include <utility>
+using std::pair;
 #include <algorithm>
 using std::max_element;
 using std::min_element;
@@ -75,12 +76,12 @@ class DynamixelHandler {
         static void CallBackDxlOpt_Gain  (const dynamixel_handler::DynamixelOption_Gain& msg);  // todo
         static void CallBackDxlOpt_Mode  (const dynamixel_handler::DynamixelOption_Mode& msg);  // todo
         static void CallBackDxlCommand                   (const dynamixel_handler::DynamixelCommand& msg);    // todo
-        static void CallBackDxlCmd_Profile           (const dynamixel_handler::DynamixelCommand_Profile& msg); // todo
         static void CallBackDxlCmd_X_Position        (const dynamixel_handler::DynamixelCommand_X_ControlPosition& msg);
         static void CallBackDxlCmd_X_Velocity        (const dynamixel_handler::DynamixelCommand_X_ControlVelocity& msg);
         static void CallBackDxlCmd_X_Current         (const dynamixel_handler::DynamixelCommand_X_ControlCurrent& msg);
         static void CallBackDxlCmd_X_CurrentPosition (const dynamixel_handler::DynamixelCommand_X_ControlCurrentPosition& msg);
         static void CallBackDxlCmd_X_ExtendedPosition(const dynamixel_handler::DynamixelCommand_X_ControlExtendedPosition& msg);
+
         //* ROS publisher subscriber instance
         static inline ros::Publisher  pub_state_;
         static inline ros::Publisher  pub_error_;
@@ -89,7 +90,6 @@ class DynamixelHandler {
         static inline ros::Publisher  pub_opt_mode_;
         static inline ros::Publisher  pub_opt_goal_;
         static inline ros::Subscriber sub_command_;
-        static inline ros::Subscriber sub_cmd_profile_;
         static inline ros::Subscriber sub_cmd_x_pos_;
         static inline ros::Subscriber sub_cmd_x_vel_;
         static inline ros::Subscriber sub_cmd_x_cur_;
@@ -99,8 +99,6 @@ class DynamixelHandler {
         static inline ros::Subscriber sub_opt_gain_;
         static inline ros::Subscriber sub_opt_mode_;
 
-    private:
-        DynamixelHandler() = delete;
         //* 単体通信を組み合わせた上位機能
         static uint8_t ScanDynamixels(uint8_t id_max);
         static void StopDynamixels();
@@ -184,6 +182,7 @@ class DynamixelHandler {
             OVERLOAD           = 5,
         };
         enum OptLimitIndex { // opt_limit_のIndex, 各種の制限値
+            NONE = -1, // Indexには使わない特殊値
             TEMPERATURE_LIMIT  = 0,
             MAX_VOLTAGE_LIMIT  = 1,
             MIN_VOLTAGE_LIMIT  = 2,
@@ -211,12 +210,12 @@ class DynamixelHandler {
         static inline map<uint8_t, bool> tq_mode_;    // 各dynamixelの id と トルクON/OFF のマップ
         static inline map<uint8_t, uint8_t> op_mode_; // 各dynamixelの id と 制御モード のマップ
         static inline map<uint8_t, uint8_t> dv_mode_; // 各dynamixelの id と ドライブモード のマップ
-        static inline map<uint8_t, array<double, 6>> cmd_values_;  // 各dynamixelの id と サーボに毎周期で書き込むことができる値のマップ, 中身の並びはCmdValueIndexに対応する
-        static inline map<uint8_t, array<double, 8>> state_values_;// 各dynamixelの id と サーボから毎周期で読み込むことができる値のマップ, 中身の並びはStValueIndexに対応する
         static inline map<uint8_t, array<bool,   6>> hardware_error_; // 各dynamixelの id と サーボが起こしたハードウェアエラーのマップ, 中身の並びはHWErrIndexに対応する
+        static inline map<uint8_t, array<double, 8>> state_values_;// 各dynamixelの id と サーボから毎周期で読み込むことができる値のマップ, 中身の並びはStValueIndexに対応する
+        static inline map<uint8_t, array<double, 6>> cmd_values_;  // 各dynamixelの id と サーボに毎周期で書き込むことができる値のマップ, 中身の並びはCmdValueIndexに対応する
+        static inline map<uint8_t, array<double ,6>> option_goal_; // 各dynamixelの id と サーボの各種制限値のマップ, 中身の並びはOptGainIndexに対応する 
         static inline map<uint8_t, array<double, 9>> option_limit_; // 各dynamixelの id と サーボの各種制限値のマップ, 中身の並びはOptLimitIndexに対応する 
         static inline map<uint8_t, array<int64_t,7>> option_gain_; // 各dynamixelの id と サーボの各種制限値のマップ, 中身の並びはOptGainIndexに対応する 
-        static inline map<uint8_t, array<int64_t,7>> option_goal_; // 各dynamixelの id と サーボの各種制限値のマップ, 中身の並びはOptGainIndexに対応する 
         // 上記の変数を適切に使うための補助的なフラグ
         static inline map<uint8_t, Time> when_op_mode_updated_; // 各dynamixelの id と op_mode_ が更新された時刻のマップ
         static inline map<uint8_t, bool> is_cmd_updated_;      // topicのcallbackによって，cmd_valuesが更新されたかどうかを示すマップ
@@ -235,6 +234,9 @@ class DynamixelHandler {
         static double SyncReadOption_Gain(); 
         static double SyncReadOption_Limit();
         static double SyncReadOption_Goal();
+
+    private:
+        DynamixelHandler() = delete;
 };
 
 // ちょっとした文字列の整形を行う補助関数

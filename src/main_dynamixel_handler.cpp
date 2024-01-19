@@ -10,7 +10,6 @@ bool DynamixelHandler::TmpTest(){
 bool DynamixelHandler::Initialize(ros::NodeHandle& nh){
     // Subscriber / Publisherの設定
     sub_command_    = nh.subscribe("/dynamixel/command",    10, DynamixelHandler::CallBackDxlCommand);
-    sub_cmd_profile_= nh.subscribe("/dynamixel/cmd/profile", 10, DynamixelHandler::CallBackDxlCmd_Profile);
     sub_cmd_x_pos_  = nh.subscribe("/dynamixel/cmd/x/position", 10, DynamixelHandler::CallBackDxlCmd_X_Position);
     sub_cmd_x_vel_  = nh.subscribe("/dynamixel/cmd/x/velocity", 10, DynamixelHandler::CallBackDxlCmd_X_Velocity);
     sub_cmd_x_cur_  = nh.subscribe("/dynamixel/cmd/x/current",  10, DynamixelHandler::CallBackDxlCmd_X_Current);

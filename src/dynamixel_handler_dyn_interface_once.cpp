@@ -2,6 +2,9 @@
 
 using namespace dyn_x;
 
+template <typename T>
+bool is_in(const T& val, const vector<T>& vec) { return std::find(vec.begin(), vec.end(), val) != vec.end(); }
+
 //* 基本機能をまとめた関数たち
 
 // 各シリーズのDynamixelを検出する．
@@ -30,7 +33,7 @@ uint8_t DynamixelHandler::ScanDynamixels(uint8_t id_max) {
 // 全てのモータの動作を停止させる．
 void DynamixelHandler::StopDynamixels(){
     vector<uint8_t> id_list; 
-    for (auto id : id_list_) if ( series_[id]==SERIES_X ) id_list.push_back(id);
+    for (auto id : id_list_) if ( is_in(id, id_list_) && series_[id]==SERIES_X ) id_list.push_back(id);
     vector<int64_t> offset_pulse(id_list.size(), 0);
     dyn_comm_.SyncWrite(homing_offset ,id_list, offset_pulse); // マジで謎だが，BusWatchdogを設定するとHomingOffset分だけ回転してしまう...多分ファームrウェアのバグ
     vector<int64_t> bus_watchtime_pulse(id_list.size(), 1);
@@ -40,7 +43,7 @@ void DynamixelHandler::StopDynamixels(){
 
 // 回転数が消えることを考慮して，モータをリブートする．
 bool DynamixelHandler::ClearHardwareError(uint8_t id){
-    if ( series_[id] != SERIES_X ) return false; // Xシリーズ以外は対応していない
+    if ( !is_in(id, id_list_) || series_[id] != SERIES_X ) return false; // Xシリーズ以外は対応していない
     if ( ReadHardwareError(id) == 0b00000000 ) return true; // エラーがない場合は何もしない
 
     const auto now_pos = ReadPresentPosition(id); // 失敗すると0が返って危ないので成功した場合だけリブート処理を行う
@@ -64,7 +67,7 @@ bool DynamixelHandler::ClearHardwareError(uint8_t id){
 
 // モータの動作モードを変更する．連続で変更するときは1秒のインターバルを入れる
 bool DynamixelHandler::ChangeOperatingMode(uint8_t id, DynamixelOperatingMode mode){
-    if ( series_[id] != SERIES_X ) return false; // Xシリーズ以外は対応していない
+    if ( !is_in(id, id_list_) || series_[id] != SERIES_X ) return false; // Xシリーズ以外は対応していない
     if ( op_mode_[id] == mode ) return true; // 既に同じモードの場合は何もしない
     if ( fabs((when_op_mode_updated_[id] - Time::now()).toSec()) < 1.0 ) rsleep(1.0); // 1秒以内に変更した場合は1秒待つ
     // 変更前のトルク状態を確認
@@ -96,7 +99,7 @@ bool DynamixelHandler::ChangeOperatingMode(uint8_t id, DynamixelOperatingMode mo
 
 // モータを停止させてからトルクを入れる．
 bool DynamixelHandler::TorqueOn(uint8_t id){
-    if ( series_[id] != SERIES_X ) return false; // Xシリーズ以外は対応していない
+    if ( !is_in(id, id_list_) || series_[id] != SERIES_X ) return false; // Xシリーズ以外は対応していない
     // dynamixel内のgoal値とこのプログラム内のcmd_values_を一致させる．
     const auto now_pos = ReadPresentPosition(id); // 失敗すると0が返って危ないので確認する
     if ( !( dyn_comm_.timeout_last_read() || dyn_comm_.comm_error_last_read() )){
@@ -123,7 +126,7 @@ bool DynamixelHandler::TorqueOn(uint8_t id){
 
 // トルクを切る
 bool DynamixelHandler::TorqueOff(uint8_t id){
-    if ( series_[id] != SERIES_X ) return false; // Xシリーズ以外は対応していない
+    if ( !is_in(id, id_list_) || series_[id] != SERIES_X ) return false; // Xシリーズ以外は対応していない
     // トルクを切る
     WriteTorqueEnable(id, false);
     // 結果を確認
