@@ -223,6 +223,7 @@ int main(int argc, char **argv) {
         ROS_ERROR("Failed to initialize DynamixelHandler");
         return 0;
     }
+    ROS_INFO("DynamixelHandler is initialized");
     signal(SIGINT, DynamixelHandler::Terminate);
 
     // ros::Timer timer = nh.createTimerを使って書き換え
